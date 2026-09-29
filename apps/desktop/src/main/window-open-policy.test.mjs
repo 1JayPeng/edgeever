@@ -20,6 +20,8 @@ describe("desktop window open policy", () => {
     expect(isAllowedZoteroUrl("zotero://select/library/items/ARTICLE01")).toBe(true);
     expect(isAllowedZoteroUrl("zotero://open-pdf/library/items/PDF00001")).toBe(true);
     expect(isAllowedZoteroUrl("zotero://open-pdf/library/items/PDF00001?page=12")).toBe(false);
+    expect(isAllowedZoteroUrl("zotero://open-pdf/library/items/PDF00001?")).toBe(false);
+    expect(isAllowedZoteroUrl("zotero://open-pdf/library/items/PDF00001#")).toBe(false);
     expect(isAllowedZoteroUrl("zotero://open-pdf/groups/123/items/PDF00001")).toBe(false);
     expect(isAllowedZoteroUrl("zotero://select/library/items/../private")).toBe(false);
     expect(isAllowedZoteroUrl("zotero://open-pdf/library/items/")).toBe(false);
