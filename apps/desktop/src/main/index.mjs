@@ -29,7 +29,7 @@ import {
   mountedInstallerCandidates,
 } from "./installation-location.mjs";
 import { userDataDirectoryFromArguments } from "./user-data-directory.mjs";
-import { isAllowedPrintPreviewUrl } from "./window-open-policy.mjs";
+import { isAllowedPrintPreviewUrl, isAllowedZoteroUrl } from "./window-open-policy.mjs";
 import { showWindow } from "./window-visibility.mjs";
 import { trayIconPath } from "./tray-icon.mjs";
 import { writeImageClipboard, writeRichClipboard, writeTextClipboard } from "./clipboard-write.mjs";
@@ -1414,13 +1414,13 @@ const createWindow = async () => {
         },
       };
     }
-    if (url.startsWith("https://") || url.startsWith("http://")) void shell.openExternal(url);
+    if (url.startsWith("https://") || url.startsWith("http://") || isAllowedZoteroUrl(url)) void shell.openExternal(url);
     return { action: "deny" };
   });
   mainWindow.webContents.on("will-navigate", (event, url) => {
     if (url.startsWith(webUrl) || url.startsWith(`${DESKTOP_APP_ORIGIN}/`) || url.startsWith("edgeever-resource://") || url.startsWith("edgeever-staged://")) return;
     event.preventDefault();
-    if (url.startsWith("https://") || url.startsWith("http://")) void shell.openExternal(url);
+    if (url.startsWith("https://") || url.startsWith("http://") || isAllowedZoteroUrl(url)) void shell.openExternal(url);
   });
   buildApplicationMenu();
 };
