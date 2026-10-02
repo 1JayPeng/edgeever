@@ -4,7 +4,7 @@ import { describe, expect, test } from "bun:test";
 const workflow = readFileSync(
   new URL("../.github/workflows/fork-release.yml", import.meta.url),
   "utf8",
-);
+).replace(/\r\n/g, "\n"); // Windows runners check out CRLF; assert on normalized content.
 
 describe("fork Windows release workflow", () => {
   test("builds unsigned assets for offline signed publication", () => {
