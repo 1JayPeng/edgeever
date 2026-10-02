@@ -3,12 +3,12 @@ import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
 import { basename } from "node:path";
 
-export const WINDOWS_UPDATE_KEY_ID = "edgeever-windows-update-2026-01";
+export const WINDOWS_UPDATE_KEY_ID = "edgeever-fork-windows-update-2026-09";
 export const WINDOWS_UPDATE_MANIFEST_NAME = "latest-windows.json";
 export const WINDOWS_UPDATE_SIGNATURE_NAME = `${WINDOWS_UPDATE_MANIFEST_NAME}.sig`;
 
 export const WINDOWS_UPDATE_PUBLIC_KEY_PEM = `-----BEGIN PUBLIC KEY-----
-MCowBQYDK2VwAyEAOuQwxSey8jGVqrvnkw9LgeBPmeqRieNg/KR0cpUy6RE=
+MCowBQYDK2VwAyEAFwB99uBWehjnhjCod2QJ9cAMljbOwFQlCCrjgYS0QsE=
 -----END PUBLIC KEY-----`;
 
 const WINDOWS_UPDATE_PUBLIC_KEYS = Object.freeze({
@@ -19,12 +19,13 @@ const MAX_METADATA_BYTES = 64 * 1024;
 const STABLE_VERSION = /^\d+\.\d+\.\d+$/;
 const SHA256_HEX = /^[0-9a-f]{64}$/;
 const SHA512_BASE64 = /^[A-Za-z0-9+/]{86}==$/;
+const RELEASE_REPOSITORY = "1JayPeng/edgeever";
 
 const releaseAssetUrl = (version, name) => {
   if (!STABLE_VERSION.test(version)) {
     throw new Error(`Windows update version must be stable X.Y.Z: ${version}`);
   }
-  return `https://github.com/tianma-if/edgeever/releases/download/v${version}/${name}`;
+  return `https://github.com/${RELEASE_REPOSITORY}/releases/download/v${version}/${name}`;
 };
 
 const responseBytes = async (response, label) => {
@@ -78,6 +79,20 @@ const assertManifestShape = (manifest, expectedVersion) => {
   }
   if (manifest.file.name !== `EdgeEver-${expectedVersion}-windows-x64.exe`) {
     throw new Error("Windows update manifest filename does not match its version");
+  }
+  if ("selfHosted" in manifest || "revision" in manifest) {
+    const selfHosted = manifest.selfHosted;
+    if (
+      !/^[0-9a-f]{40}$/.test(manifest.revision)
+      || typeof selfHosted?.name !== "string"
+      || selfHosted.name !== `edgeever-self-hosted-${expectedVersion}-windows-x64.zip`
+      || !Number.isSafeInteger(selfHosted.size)
+      || selfHosted.size <= 0
+      || typeof selfHosted.sha256 !== "string"
+      || !SHA256_HEX.test(selfHosted.sha256)
+    ) {
+      throw new Error("Windows update self-hosted release fields are invalid");
+    }
   }
 };
 

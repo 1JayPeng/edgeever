@@ -41,9 +41,12 @@ bun run release -- \
 公开 Release 说明。公开说明只包含用户可感知的变化、影响和必要的迁移提醒。
 
 使用 `--dry-run` 查看提交覆盖、原生端重建计划和说明。发布完成后不会下载、
-安装或启动 macOS 应用；已安装的 macOS、Windows 与 Linux 桌面端通过应用内自动
-更新机制获取新版。Linux 预览版发布前必须通过真实 AppImage 跨版本更新验证。仅在
-确实需要原有安装验收时显式传入 `--install-desktop`。
+安装或启动 macOS 应用；已安装的 macOS、Linux 以及已从本 Fork 完成首次安装的
+Windows 客户端可通过应用内自动更新获取新版。现有上游 Windows 客户端固定上游
+更新源和签名密钥，必须手动安装首个 Fork Release；详见
+[Windows 预览版安全与更新说明](windows-preview.zh-CN.md)。Linux 预览版发布前必须
+通过真实 AppImage 跨版本更新验证。仅在确实需要原有安装验收时显式传入
+`--install-desktop`。
 
 ## EdgeEver 特有规则
 

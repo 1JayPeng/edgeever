@@ -43,11 +43,14 @@ contain only user-visible changes, impact, and necessary migration guidance.
 
 Use `--dry-run` to inspect commit coverage, the native rebuild plan, and notes.
 After publication, the command does not download, install, or launch the macOS
-application. Existing macOS, Windows, and Linux installations receive new
-versions through the in-app automatic updater. Linux Preview releases must pass
-a real AppImage-to-AppImage transition through the cross-version gate. Pass
-`--install-desktop` explicitly only when the previous installation check is
-actually needed.
+application. Existing macOS and Linux installations, plus Windows installations
+already bootstrapped from this fork, receive new versions through the in-app
+automatic updater. Existing upstream Windows installations must manually install
+the first fork Release because they pin the upstream feed and signing key; see
+[Windows Preview security and updates](windows-preview.md). Linux Preview
+releases must pass a real AppImage-to-AppImage transition through the
+cross-version gate. Pass `--install-desktop` explicitly only when the previous
+installation check is actually needed.
 
 ## EdgeEver-Specific Behavior
 

@@ -1,0 +1,186 @@
+name: Build fork release assets
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Stable tag matching package.json, for example v1.90.1
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    if: github.repository == '1JayPeng/edgeever'
+    name: Windows desktop and self-hosted bundle
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      RELEASE_TAG: ${{ inputs.release_tag }}
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: refs/tags/${{ inputs.release_tag }}
+          fetch-depth: 0
+
+      - name: Validate tagged source
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json | ConvertFrom-Json).version
+          $desktopVersion = (Get-Content apps/desktop/package.json | ConvertFrom-Json).version
+          if ($env:RELEASE_TAG -ne "v$version" -or $desktopVersion -ne $version) {
+            throw "release_tag and desktop package version must match package.json"
+          }
+          if ($env:RELEASE_TAG -notmatch '^v\d+\.\d+\.\d+$') {
+            throw "release_tag must match vX.Y.Z"
+          }
+          $tagRef = "refs/tags/$env:RELEASE_TAG"
+          git fetch --force origin "main:refs/remotes/origin/main" "${tagRef}:${tagRef}"
+          if ($LASTEXITCODE -ne 0) {
+            throw "Could not fetch release tag and main"
+          }
+          git show-ref --verify --quiet $tagRef
+          if ($LASTEXITCODE -ne 0) {
+            throw "release_tag must name an existing refs/tags/vX.Y.Z tag"
+          }
+          $tagCommit = (git rev-parse --verify --end-of-options "${tagRef}^{commit}").Trim()
+          $mainCommit = (git rev-parse --verify --end-of-options "refs/remotes/origin/main^{commit}").Trim()
+          git merge-base --is-ancestor $tagCommit $mainCommit
+          if ($LASTEXITCODE -ne 0) {
+            throw "release_tag must resolve to a commit reachable from main"
+          }
+          if ($tagCommit -ne (git rev-parse HEAD).Trim()) {
+            throw "checked-out source does not match release_tag"
+          }
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+        with:
+          toolchain: "1.98.1"
+
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          for ($attempt = 1; $attempt -le 3; $attempt++) {
+            bun install --frozen-lockfile
+            if ($LASTEXITCODE -eq 0) { exit 0 }
+            if ($attempt -eq 3) { exit $LASTEXITCODE }
+            Start-Sleep -Seconds (15 * $attempt)
+          }
+
+      - name: Verify release behavior
+        run: |
+          bun run typecheck
+          bun run test:release-planning
+          bun test apps/desktop/src/main/window-open-policy.test.mjs apps/desktop/src/main/windows-update-trust.test.mjs scripts/fork-release-workflow.test.mjs scripts/self-hosted-release-layout.test.mjs scripts/verify-self-hosted-windows-release.test.mjs
+
+      - name: Build web renderer
+        env:
+          EDGE_EVER_DESKTOP_BUILD: "1"
+        run: bun run build:web
+
+      - name: Build Windows sidecar
+        run: cargo build --manifest-path crates/desktop-sidecar/Cargo.toml --release
+
+      - name: Package Windows installer
+        env:
+          EDGE_EVER_DESKTOP_ARCH: x64
+          EDGE_EVER_DESKTOP_TARGET: win
+        run: bun scripts/run-desktop-builder.mjs --publish never
+
+      - name: Verify Windows installer
+        env:
+          EDGE_EVER_DESKTOP_ARCH: x64
+          EDGE_EVER_VERIFY_TARGET: win32
+        run: bun scripts/verify-desktop-package.mjs
+
+      - name: Build self-hosted runtime bundle
+        shell: pwsh
+        run: |
+          bun run build:web
+          $version = (Get-Content package.json | ConvertFrom-Json).version
+          $bundleRoot = Join-Path $env:RUNNER_TEMP "edgeever-self-hosted-$version"
+          $bundlePath = "release/desktop/edgeever-self-hosted-$version-windows-x64.zip"
+          $probeData = Join-Path $env:RUNNER_TEMP "edgeever-self-hosted-probe-data"
+          Remove-Item -LiteralPath $bundleRoot, $bundlePath, $probeData -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force -Path "$bundleRoot/apps/web", "$bundleRoot/migrations", $probeData | Out-Null
+          bun build scripts/self-hosted-server.mjs --compile --target=bun-windows-x64 --outfile "$bundleRoot/edgeever-self-hosted.exe"
+          Copy-Item apps/web/dist "$bundleRoot/apps/web/dist" -Recurse
+          Copy-Item migrations/* "$bundleRoot/migrations" -Recurse
+          @{
+            schemaVersion = 1
+            version = $version
+            revision = (git rev-parse HEAD).Trim()
+          } | ConvertTo-Json | Set-Content "$bundleRoot/release.json" -Encoding utf8NoBOM
+          Compress-Archive -Path (Get-ChildItem -LiteralPath $bundleRoot) -DestinationPath $bundlePath -CompressionLevel Optimal
+
+      - name: Self-hosted bundle smoke test
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json | ConvertFrom-Json).version
+          $bundlePath = "release/desktop/edgeever-self-hosted-$version-windows-x64.zip"
+          $verifyRoot = Join-Path $env:RUNNER_TEMP "edgeever-self-hosted-verify"
+          $probeData = Join-Path $env:RUNNER_TEMP "edgeever-self-hosted-probe-data"
+          Remove-Item -LiteralPath $verifyRoot, $probeData -Recurse -Force -ErrorAction SilentlyContinue
+          Expand-Archive -LiteralPath $bundlePath -DestinationPath $verifyRoot
+          foreach ($required in @(
+            "edgeever-self-hosted.exe",
+            "apps/web/dist/index.html",
+            "migrations",
+            "release.json"
+          )) {
+            if (-not (Test-Path (Join-Path $verifyRoot $required))) {
+              throw "Self-hosted bundle is missing $required"
+            }
+          }
+          # Direct compiled launch must discover its extracted assets from the executable.
+          Remove-Item Env:EDGE_EVER_APP_DIR -ErrorAction SilentlyContinue
+          $env:EDGE_EVER_DATA_DIR = $probeData
+          $env:EDGE_EVER_HOST = "127.0.0.1"
+          $env:EDGE_EVER_PORT = "18794"
+          $env:EDGE_EVER_AUTH_PASSWORD = "self-hosted-ci-probe-password"
+          $process = Start-Process -FilePath (Join-Path $verifyRoot "edgeever-self-hosted.exe") -PassThru -NoNewWindow
+          try {
+            for ($attempt = 1; $attempt -le 60; $attempt++) {
+              try {
+                $health = Invoke-RestMethod -Uri "http://127.0.0.1:18794/api/health" -TimeoutSec 2
+                if ($health.ok -eq $true) { break }
+              } catch {
+                if ($process.HasExited) { throw "Self-hosted bundle exited with code $($process.ExitCode)" }
+                Start-Sleep -Seconds 1
+              }
+            }
+            if ($health.ok -ne $true) { throw "Self-hosted bundle health check failed" }
+          } finally {
+            if (-not $process.HasExited) { Stop-Process -Id $process.Id -Force }
+          }
+          if (-not (Test-Path (Join-Path $probeData "edgeever.sqlite"))) {
+            throw "Self-hosted bundle did not create the isolated probe database"
+          }
+
+      - name: Create unsigned Windows update metadata with self-hosted binding
+        shell: pwsh
+        run: |
+          $version = (Get-Content apps/desktop/package.json | ConvertFrom-Json).version
+          $revision = (git rev-parse HEAD).Trim()
+          $bundlePath = "release/desktop/edgeever-self-hosted-$version-windows-x64.zip"
+          node scripts/create-windows-update-metadata.mjs release/desktop $version --self-hosted $bundlePath --revision $revision
+
+      - name: Upload unsigned release artifact
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: edgeever-fork-release-${{ inputs.release_tag }}
+          path: |
+            release/desktop/EdgeEver-*-windows-x64.exe
+            release/desktop/latest.yml
+            release/desktop/latest-windows.json
+            release/desktop/SHA256SUMS-windows.txt
+            release/desktop/edgeever-self-hosted-*-windows-x64.zip
+          if-no-files-found: error
+          retention-days: 14

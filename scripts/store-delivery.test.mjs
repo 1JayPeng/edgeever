@@ -2,6 +2,8 @@ import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { parseStoreDeliveryArgs } from "./store-delivery.mjs";
 
+const readSource = (url) => readFileSync(url, "utf8").replaceAll(String.fromCharCode(13, 10), "\n");
+
 describe("store delivery command", () => {
   test("uses full production delivery defaults", () => {
     expect(parseStoreDeliveryArgs(["--release", "v1.7.0"])).toMatchObject({
@@ -50,7 +52,7 @@ describe("store delivery command", () => {
   });
 
   test("uses the pinned official EAS CLI setup in store jobs", () => {
-    const workflow = readFileSync(
+    const workflow = readSource(
       new URL("../.github/workflows/store-delivery.yml", import.meta.url),
       "utf8",
     );
@@ -116,7 +118,7 @@ describe("store delivery command", () => {
   });
 
   test("replaces the GitHub APK with the Play-signed universal APK", () => {
-    const workflow = readFileSync(
+    const workflow = readSource(
       new URL("../.github/workflows/store-delivery.yml", import.meta.url),
       "utf8",
     );
@@ -135,7 +137,7 @@ describe("store delivery command", () => {
   });
 
   test("can prepare a matching Draft before formal publication", () => {
-    const workflow = readFileSync(
+    const workflow = readSource(
       new URL("../.github/workflows/store-delivery.yml", import.meta.url),
       "utf8",
     );
@@ -162,7 +164,7 @@ describe("store delivery command", () => {
   });
 
   test("uses a dedicated Draft audit that accepts only the Play app signer", () => {
-    const workflow = readFileSync(
+    const workflow = readSource(
       new URL(
         "../.github/workflows/android-play-signature-audit.yml",
         import.meta.url,
@@ -191,7 +193,7 @@ describe("store delivery command", () => {
   });
 
   test("keeps the Play bundle and generated Release APK arm64-only", () => {
-    const workflow = readFileSync(
+    const workflow = readSource(
       new URL("../.github/workflows/store-delivery.yml", import.meta.url),
       "utf8",
     );

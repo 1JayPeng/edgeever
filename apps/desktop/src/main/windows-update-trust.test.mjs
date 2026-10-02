@@ -1,10 +1,12 @@
 import { generateKeyPairSync, sign } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "bun:test";
 import {
   WINDOWS_UPDATE_KEY_ID,
+  fetchTrustedWindowsUpdate,
   verifyDownloadedWindowsUpdate,
   verifyWindowsUpdateMetadata,
 } from "./windows-update-trust.mjs";
@@ -35,7 +37,7 @@ const updateInfo = {
 
 const signedFixture = () => {
   const bytes = Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`);
-  const signature = "Itc3UD0G6Hn6BWdk9qlJ4SoqAUDn8efi1VRVUWDtA3Ip5+gwpAj7HxElxM6D/GXcAlHFxnVv19soEWxlfZLCDA==";
+  const signature = "34cvdNwFsnnMjEXqUqk8P6q6pHLOxjTBRQ0LZIK+o8LC6h0cD0tBimRzAhL4O/qBZAFqs6mW6glXmM+0ebV0AQ==";
   return {
     manifestBytes: bytes,
     signatureBytes: Buffer.from(`${JSON.stringify({ schemaVersion: 1, keyId: WINDOWS_UPDATE_KEY_ID, signature })}\n`),
@@ -43,6 +45,10 @@ const signedFixture = () => {
 };
 
 describe("Windows update trust", () => {
+  test("uses a fork-specific update key identity", () => {
+    expect(WINDOWS_UPDATE_KEY_ID).toBe("edgeever-fork-windows-update-2026-09");
+  });
+
   test("accepts metadata signed by the pinned release key", () => {
     const signed = signedFixture();
     expect(verifyWindowsUpdateMetadata({
@@ -50,6 +56,63 @@ describe("Windows update trust", () => {
       expectedVersion: manifest.version,
       updateInfo,
     })).toEqual(manifest);
+  });
+
+  test("rejects a self-hosted archive that is not bound to a revision", () => {
+    const { privateKey, publicKey } = generateKeyPairSync("ed25519");
+    const selfHostedManifest = {
+      ...manifest,
+      selfHosted: {
+        name: "edgeever-self-hosted-1.49.0-windows-x64.zip",
+        size: 1,
+        sha256: "a".repeat(64),
+      },
+    };
+    const manifestBytes = Buffer.from(`${JSON.stringify(selfHostedManifest)}\n`);
+    const signatureBytes = Buffer.from(JSON.stringify({
+      schemaVersion: 1,
+      keyId: WINDOWS_UPDATE_KEY_ID,
+      signature: sign(null, manifestBytes, privateKey).toString("base64"),
+    }));
+
+    expect(() => verifyWindowsUpdateMetadata({
+      manifestBytes,
+      signatureBytes,
+      expectedVersion: manifest.version,
+      updateInfo,
+      trustedPublicKeys: { [WINDOWS_UPDATE_KEY_ID]: publicKey },
+    })).toThrow("self-hosted");
+  });
+
+  test("loads Windows update metadata from this fork's Release", async () => {
+    const signed = signedFixture();
+    const requestedUrls = [];
+    const response = (bytes) => ({
+      ok: true,
+      arrayBuffer: async () => bytes,
+    });
+
+    await expect(fetchTrustedWindowsUpdate({
+      version: manifest.version,
+      updateInfo,
+      fetchImpl: async (url) => {
+        requestedUrls.push(url);
+        return response(url.endsWith(".sig") ? signed.signatureBytes : signed.manifestBytes);
+      },
+    })).resolves.toEqual(manifest);
+
+    expect(requestedUrls).toEqual([
+      "https://github.com/1JayPeng/edgeever/releases/download/v1.49.0/latest-windows.json",
+      "https://github.com/1JayPeng/edgeever/releases/download/v1.49.0/latest-windows.json.sig",
+    ]);
+  });
+
+  test("embeds this fork as the Electron update source", () => {
+    const builderConfig = readFileSync(
+      new URL("../../electron-builder.yml", import.meta.url),
+      "utf8",
+    );
+    expect(builderConfig.replaceAll("\r\n", "\n")).toContain("  owner: 1JayPeng\n  repo: edgeever");
   });
 
   test("rejects metadata signed by any other key", () => {

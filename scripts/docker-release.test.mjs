@@ -3,21 +3,26 @@ import { readFileSync } from "node:fs";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
-import { resolveSelfHostedConfig } from "./self-hosted-config.mjs";
+import {
+  resolveSelfHostedApplicationDirectory,
+  resolveSelfHostedConfig,
+} from "./self-hosted-config.mjs";
 import { loadSelfHostedEnvironment } from "./self-hosted-secrets.mjs";
 
 const readProjectFile = (path) =>
-  readFileSync(resolve(import.meta.dir, "..", path), "utf8");
+  readFileSync(resolve(import.meta.dir, "..", path), "utf8")
+    .replaceAll(String.fromCharCode(13, 10), "\n");
 
 describe("self-hosted runtime configuration", () => {
   test("uses the portable single-volume defaults", () => {
-    const config = resolveSelfHostedConfig({}, "/opt/edgeever");
-    expect(config.dataDirectory).toBe("/opt/edgeever/.edgeever-data");
+    const projectRoot = resolve(import.meta.dir, "fixture-portable");
+    const config = resolveSelfHostedConfig({}, projectRoot);
+    expect(config.dataDirectory).toBe(resolve(projectRoot, ".edgeever-data"));
     expect(config.databaseFile).toBe(
-      "/opt/edgeever/.edgeever-data/edgeever.sqlite",
+      resolve(projectRoot, ".edgeever-data", "edgeever.sqlite"),
     );
     expect(config.resourcesDirectory).toBe(
-      "/opt/edgeever/.edgeever-data/resources",
+      resolve(projectRoot, ".edgeever-data", "resources"),
     );
     expect(config.port).toBe(8787);
     expect(config.storageBackend).toBe("local");
@@ -49,6 +54,16 @@ describe("self-hosted runtime configuration", () => {
       resolveSelfHostedConfig({ EDGE_EVER_STORAGE_BACKEND: "s3" }),
     ).toThrow("EDGE_EVER_S3_BUCKET");
   });
+
+  test("uses an explicit application root for a released self-hosted bundle", () => {
+    expect(
+      resolveSelfHostedApplicationDirectory(
+        { EDGE_EVER_APP_DIR: resolve(import.meta.dir, "fixture-release") },
+        resolve(import.meta.dir, "ignored-source-root"),
+      ),
+    ).toBe(resolve(import.meta.dir, "fixture-release"));
+  });
+
 });
 
 describe("Docker release contract", () => {

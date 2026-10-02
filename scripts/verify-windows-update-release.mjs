@@ -7,22 +7,14 @@ import {
   verifyDownloadedWindowsUpdate,
   verifyWindowsUpdateMetadata,
 } from "../apps/desktop/src/main/windows-update-trust.mjs";
+import { verifySelfHostedWindowsRelease } from "./verify-self-hosted-windows-release.mjs";
 
-export const verifyWindowsUpdateRelease = async (directory) => {
+export const verifyWindowsUpdateRelease = async (directory, {
+  trustedPublicKeys,
+} = {}) => {
   const manifestBytes = readFileSync(join(directory, WINDOWS_UPDATE_MANIFEST_NAME));
   const signatureBytes = readFileSync(join(directory, WINDOWS_UPDATE_SIGNATURE_NAME));
   const untrustedManifest = JSON.parse(manifestBytes.toString("utf8"));
-  const expectedNames = [
-    untrustedManifest.file?.name,
-    "latest.yml",
-    WINDOWS_UPDATE_MANIFEST_NAME,
-    WINDOWS_UPDATE_SIGNATURE_NAME,
-    "SHA256SUMS-windows.txt",
-  ].sort();
-  const actualNames = readdirSync(directory).sort();
-  if (JSON.stringify(actualNames) !== JSON.stringify(expectedNames)) {
-    throw new Error(`Windows update audit expected exactly: ${expectedNames.join(", ")}`);
-  }
   const manifest = verifyWindowsUpdateMetadata({
     manifestBytes,
     signatureBytes,
@@ -35,11 +27,34 @@ export const verifyWindowsUpdateRelease = async (directory) => {
         sha512: untrustedManifest.file?.sha512,
       }],
     },
+    ...(trustedPublicKeys ? { trustedPublicKeys } : {}),
   });
+  const expectedNames = [
+    manifest.file.name,
+    manifest.selfHosted?.name,
+    "latest.yml",
+    WINDOWS_UPDATE_MANIFEST_NAME,
+    WINDOWS_UPDATE_SIGNATURE_NAME,
+    "SHA256SUMS-windows.txt",
+  ].filter(Boolean).sort();
+  const actualNames = readdirSync(directory).sort();
+  if (JSON.stringify(actualNames) !== JSON.stringify(expectedNames)) {
+    throw new Error(`Windows update audit expected exactly: ${expectedNames.join(", ")}`);
+  }
   await verifyDownloadedWindowsUpdate({
     path: join(directory, manifest.file.name),
     manifest,
   });
+  if (manifest.selfHosted) {
+    const selfHostedManifest = await verifySelfHostedWindowsRelease({
+      directory,
+      expectedVersion: manifest.version,
+      ...(trustedPublicKeys ? { trustedPublicKeys } : {}),
+    });
+    if (JSON.stringify(selfHostedManifest) !== JSON.stringify(manifest)) {
+      throw new Error("Self-hosted release manifest does not match the signed Windows update manifest");
+    }
+  }
 
   const latestYml = readFileSync(join(directory, "latest.yml"), "utf8");
   const expectedLatestYml = [

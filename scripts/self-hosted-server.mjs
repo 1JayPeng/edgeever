@@ -7,11 +7,18 @@ import { isUnauthenticatedAccessEnabled } from "../apps/api/src/auth-state.ts";
 import { fetchEdgeEverApp } from "../apps/api/src/index.ts";
 import { nodePublicFetch } from "../apps/api/src/node-public-network.ts";
 import { createSelfHostedStorageAdapter } from "../apps/api/src/self-hosted-storage-adapter.ts";
-import { resolveSelfHostedConfig } from "./self-hosted-config.mjs";
+import {
+  resolveSelfHostedApplicationDirectory,
+  resolveSelfHostedConfig,
+  resolveSelfHostedRuntimeEnvironment,
+} from "./self-hosted-config.mjs";
 import { ensureSelfHostedCredentialSecrets, loadSelfHostedEnvironment } from "./self-hosted-secrets.mjs";
 
-const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const runtimeEnvironment = await loadSelfHostedEnvironment(process.env);
+const sourceProjectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const runtimeEnvironment = await loadSelfHostedEnvironment(
+  resolveSelfHostedRuntimeEnvironment(process.env),
+);
+const projectRoot = resolveSelfHostedApplicationDirectory(runtimeEnvironment, sourceProjectRoot);
 const config = resolveSelfHostedConfig(runtimeEnvironment, projectRoot);
 const { dataDirectory, databaseFile, resourcesDirectory, webDirectory } = config;
 

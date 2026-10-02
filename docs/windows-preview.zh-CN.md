@@ -2,12 +2,12 @@
 
 ## 分发状态
 
-EdgeEver 通过官方 [GitHub Releases](https://github.com/tianma-if/edgeever/releases/latest)
+EdgeEver 通过受维护 Fork 的 [GitHub Releases](https://github.com/1JayPeng/edgeever/releases/latest)
 页面分发 Windows x64 预览版。当前安装包与应用内可执行文件尚未使用
 Authenticode 签名，因此 Windows SmartScreen、杀毒软件或组织策略可能提示风险或
 直接阻止安装。这类提示是预览阶段的预期现象，但并不表示任意来源的副本都安全。
 
-- 仅从 `tianma-if/edgeever` 官方 Release 下载。
+- 仅从 `1JayPeng/edgeever` 官方 Release 下载。
 - 不要为 EdgeEver 关闭 SmartScreen、杀毒软件或组织安全控制。
 - 如果组织策略阻止安装，请先使用 Web/PWA 客户端，等待后续
   Authenticode 签名版本。
@@ -38,15 +38,45 @@ Windows 安装包未通过最终本地校验前，应用不会开启退出时自
 每个正式 Release 包含以下 Windows 资产：
 
 - `EdgeEver-<version>-windows-x64.exe`
+- `edgeever-self-hosted-<version>-windows-x64.zip`
 - `latest.yml`
 - `latest-windows.json`
 - `latest-windows.json.sig`
 - `SHA256SUMS-windows.txt`
 
-GitHub Actions 构建并验证未签名安装包，随后把除签名文件以外的四项输入上传到
-Draft Release。发布命令使用 `EDGE_EVER_WINDOWS_UPDATE_SIGNING_KEY` 指向的
-仓库外密钥，在本机为精确清单离线签名；然后触发独立 GitHub Actions 审计，重新
-下载全部五项资产并验证签名及安装包摘要，全部通过后才允许公开发布。
+self-hosted ZIP 仅包含编译后的运行时、前端资源、migrations 和 `release.json`；
+不得包含 SQLite/WAL 数据、resources 或凭据文件。其名称、大小、SHA-256、版本与
+revision 会在签名 `latest-windows.json` 前绑定。
+
+该 Fork 的 GitHub Actions 构建并验证五项未签名输入（安装包、self-hosted ZIP、
+`latest.yml`、清单和校验和），再上传为 Actions artifact。它刻意不创建 Release、
+不上传 Release 资产，也不读取签名私钥。操作员下载精确 artifact，验证 tag/revision
+及 ZIP 布局，创建 Draft Release，使用
+`EDGE_EVER_WINDOWS_UPDATE_SIGNING_KEY` 指向的仓库外密钥在本机为精确清单离线签名，
+上传全部六项资产，再下载 Draft 资产，重新执行签名、安装包、ZIP hash 与内嵌
+`release.json` 的完整审计后才公开发布。
+
+## Self-hosted Windows 包
+
+将 ZIP 解压到可替换的应用目录，绝不能解压到数据目录。编译后的可执行文件会自动发现
+解压后的资产；不要设置 `EDGE_EVER_APP_DIR`。必须为其设置应用目录外的绝对
+`EDGE_EVER_DATA_DIR`；仅允许绑定 loopback。
+
+```powershell
+$app = 'C:\EdgeEver\app\1.90.1'
+$env:EDGE_EVER_DATA_DIR = "$env:LOCALAPPDATA\edgeever-local"
+$env:EDGE_EVER_HOST = '127.0.0.1'
+$env:EDGE_EVER_PORT = '18789'
+# 仅首次启动：只设置一种认证来源。优先使用仅所有者可读的文件。
+$env:EDGE_EVER_AUTH_PASSWORD_FILE = '<绝对路径：仅所有者可读的密码文件>'
+& "$app\edgeever-self-hosted.exe"
+Invoke-RestMethod 'http://127.0.0.1:18789/api/health'
+```
+
+不得将密码文件、SQLite 数据库、`-wal`、`-shm`、resources 或
+`edgeever-secrets.json` 放在 `$app` 下或 ZIP 中。升级时先正常停止服务，对外部
+数据目录执行冷备份，再只替换 `$app`。数据目录保持不变。若迁移已执行，仅可通过
+同时恢复匹配的旧应用目录和冷备份回滚；不要用旧二进制启动已迁移的数据。
 
 私钥必须是 Ed25519 PKCS#8 PEM 文件，必须保存在仓库外，并在另一个安全位置留有
 备份。发布 shell 使用绝对路径配置：
@@ -55,12 +85,15 @@ Draft Release。发布命令使用 `EDGE_EVER_WINDOWS_UPDATE_SIGNING_KEY` 指向
 export EDGE_EVER_WINDOWS_UPDATE_SIGNING_KEY=/absolute/path/to/windows-update-ed25519-private.pem
 ```
 
-首个信任锚的密钥 ID 为 `edgeever-windows-update-2026-01`，SPKI DER SHA-256
-指纹为 `ec12b4b5673a2e6ac3666d0cc90dd5c418f3650418cd2b91fa09cec969d50db9`。
+Fork 信任锚的密钥 ID 为 `edgeever-fork-windows-update-2026-09`，SPKI DER SHA-256
+指纹为 `d7a861ef54f4000fe7f0d29e805d4f4f732b4808301c6dbaa4a6de86242d156c`。
 
-私钥缺失或与桌面客户端固定的公钥不匹配时，Release 会保持 Draft。密钥轮换必须
-跨两个 Release：先发布同时信任新旧公钥、但仍由旧密钥签名的客户端；后续 Release
-再切换到新密钥签名。
+该 Fork 不持有上游签名私钥。因此现有上游安装无法通过自动更新迁移：请从
+`1JayPeng/edgeever` 手动下载并安装首个 Fork Release。后续 Fork Release 使用
+固定的 Fork 密钥正常自动更新。不得为不同公钥复用上游密钥 ID。
+
+本地私钥缺失或与桌面客户端固定的公钥不匹配时，Release 会保持 Draft。今后 Fork
+密钥轮换必须由当前受信 Fork 密钥签名，经过两个 Release 完成过渡。
 
 ## 未来迁移到 Authenticode
 

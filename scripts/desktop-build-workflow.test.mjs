@@ -1,13 +1,15 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, test } from "bun:test";
 
-const workflow = readFileSync(new URL("../.github/workflows/desktop-build.yml", import.meta.url), "utf8");
-const mobileWorkflow = readFileSync(new URL("../.github/workflows/mobile-build.yml", import.meta.url), "utf8");
-const desktopPackageVerifier = readFileSync(new URL("./verify-desktop-package.mjs", import.meta.url), "utf8");
-const packagedStartupVerifier = readFileSync(new URL("./verify-packaged-desktop-startup.mjs", import.meta.url), "utf8");
-const protocolE2eVerifier = readFileSync(new URL("./verify-desktop-protocol-e2e.mjs", import.meta.url), "utf8");
-const cargoConfig = readFileSync(new URL("../.cargo/config.toml", import.meta.url), "utf8");
-const desktopBuilderConfig = readFileSync(new URL("../apps/desktop/electron-builder.yml", import.meta.url), "utf8");
+const readSource = (url) => readFileSync(url, "utf8").replaceAll(String.fromCharCode(13, 10), "\n");
+
+const workflow = readSource(new URL("../.github/workflows/desktop-build.yml", import.meta.url));
+const mobileWorkflow = readSource(new URL("../.github/workflows/mobile-build.yml", import.meta.url));
+const desktopPackageVerifier = readSource(new URL("./verify-desktop-package.mjs", import.meta.url));
+const packagedStartupVerifier = readSource(new URL("./verify-packaged-desktop-startup.mjs", import.meta.url));
+const protocolE2eVerifier = readSource(new URL("./verify-desktop-protocol-e2e.mjs", import.meta.url));
+const cargoConfig = readSource(new URL("../.cargo/config.toml", import.meta.url));
+const desktopBuilderConfig = readSource(new URL("../apps/desktop/electron-builder.yml", import.meta.url));
 
 function step(name) {
   const start = workflow.indexOf(`      - name: ${name}\n`);
@@ -22,7 +24,7 @@ describe("desktop release workflow", () => {
     expect(desktopBuilderConfig).toContain([
       "publish:",
       "  provider: github",
-      "  owner: tianma-if",
+      "  owner: 1JayPeng",
       "  repo: edgeever",
       "  releaseType: release",
     ].join("\n"));
@@ -31,7 +33,7 @@ describe("desktop release workflow", () => {
     expect(desktopBuilderConfig).toContain("PlugIns/EdgeEverShare.appex");
     expect(desktopBuilderConfig).toContain("sign: ./scripts/sign-share-extension.cjs");
     expect(desktopBuilderConfig).not.toContain("afterSign:");
-    const shareSigner = readFileSync(new URL("../apps/desktop/scripts/sign-share-extension.cjs", import.meta.url), "utf8");
+    const shareSigner = readSource(new URL("../apps/desktop/scripts/sign-share-extension.cjs", import.meta.url));
     expect(shareSigner).toContain("await signApp(opts)");
     expect(shareSigner).not.toContain("await sign(opts)");
     expect(shareSigner).toContain('"runtime"');
