@@ -11,8 +11,14 @@
   "webClipper": {
     "message": "Web Clipper"
   },
-  "popupDescription": {
-    "message": "表示中のページや選択した内容を取り込みます。選択した文字の右クリックでその文章を、画像の右クリックで画像を、X 上の投稿の右クリックでその投稿を保存できます。"
+  "supportedPlatformsLabel": {
+    "message": "最適化された主要プラットフォーム："
+  },
+  "platformXiaohongshu": {
+    "message": "小紅書"
+  },
+  "platformZhihu": {
+    "message": "知乎"
   },
   "saveCurrentPage": {
     "message": "このページを取り込む"
@@ -34,6 +40,9 @@
   },
   "optionsTitle": {
     "message": "EdgeEver Web Clipper の設定"
+  },
+  "optionsSubtitle": {
+    "message": "EdgeEver インスタンスへの接続と既定のノートブックを設定します。"
   },
   "diagnosticsTitle": {
     "message": "情報と診断"
@@ -159,6 +168,12 @@
   "capturedAtLabel": {
     "message": "取り込み日時"
   },
+  "googleSearchLabel": {
+    "message": "Google 検索"
+  },
+  "searchKeywordLabel": {
+    "message": "キーワード"
+  },
   "noAvailableNotebooks": {
     "message": "EdgeEver に使えるノートブックがありません。"
   },
@@ -197,10 +212,10 @@
     "message": "（このページから読み取れる本文はありませんでした）"
   },
   "saveSelectionToEdgeEver": {
-    "message": "選択した文字を EdgeEver に保存"
+    "message": "選択したテキストを EdgeEver に保存"
   },
   "selectionSaveHint": {
-    "message": "ページ上の文字を選択して右クリックし、「選択した文字を EdgeEver に保存」を選びます。その文章は、上で選んだ既定のノートブックに 1 件のノートとして保存されます。"
+    "message": "ページ上の文字を選択して右クリックし、「選択したテキストを EdgeEver に保存」を選びます。その文章は、上で選んだ既定のノートブックに 1 件のノートとして保存されます。"
   },
   "savingSelection": {
     "message": "選択した文字を保存しています…"
@@ -274,10 +289,10 @@
     "message": "この保存は終了しています。画像を右クリックしてやり直してください。"
   },
   "saveTweetToEdgeEver": {
-    "message": "この投稿を EdgeEver に保存"
+    "message": "投稿を EdgeEver に保存"
   },
   "tweetSaveHint": {
-    "message": "X で投稿を右クリックし、「この投稿を EdgeEver に保存」を選びます。本文は「さらに表示」で折りたたまれた部分も含めて保存され、表示中の画像とともに、上で選んだ既定のノートブックへ 1 件のノートになります。"
+    "message": "X で投稿を右クリックし、「投稿を EdgeEver に保存」を選びます。本文は「さらに表示」で折りたたまれた部分も含めて保存され、表示中の画像とともに、上で選んだ既定のノートブックへ 1 件のノートになります。"
   },
   "savingTweet": {
     "message": "この投稿を保存しています…"
@@ -310,9 +325,165 @@
     "message": "投稿"
   },
   "tweetSaveWindowTitle": {
-    "message": "この投稿を EdgeEver に保存"
+    "message": "投稿を EdgeEver に保存"
   },
   "tweetTimeLabel": {
     "message": "日時"
+  },
+  "saveGithubRepoToEdgeEver": {
+    "message": "リポジトリ情報を EdgeEver に保存"
+  },
+  "githubRepoSaveHint": {
+    "message": "GitHub のリポジトリページまたはコード一覧で、ページの余白、紹介文、または README 本文を右クリックし、「リポジトリ情報を EdgeEver に保存」を選びます。アドレスと紹介文は、上で選んだ既定のノートブックに 1 件のノートとして保存されます。Issue、ディスカッション、単一ファイルのページは保存しません。"
+  },
+  "savingGithubRepo": {
+    "message": "このリポジトリを保存しています…"
+  },
+  "githubRepoSaved": {
+    "message": "このリポジトリをノートとして保存しました。"
+  },
+  "githubRepoNotPage": {
+    "message": "GitHub のリポジトリページまたはコード一覧ではないため、保存しませんでした。"
+  },
+  "githubRepoUnreadable": {
+    "message": "リポジトリの情報を読み取れなかったため、保存しませんでした。"
+  },
+  "githubRepoHomepageLabel": {
+    "message": "ホームページ"
+  },
+  "githubRepoLanguageLabel": {
+    "message": "言語"
+  },
+  "githubRepoLicenseLabel": {
+    "message": "ライセンス"
+  },
+  "githubRepoTopicsLabel": {
+    "message": "トピック"
+  },
+  "saveXhsToEdgeEver": {
+    "message": "ノートを EdgeEver に保存"
+  },
+  "xhsSaveHint": {
+    "message": "小紅書でノート本文を右クリックし、「ノートを EdgeEver に保存」を選びます。タイトル、本文、画像が 1 件のノートになります。コメントは含めません。画像を右クリックした場合は、その画像だけを保存します。"
+  },
+  "savingXhs": {
+    "message": "このノートを保存しています…"
+  },
+  "xhsSaved": {
+    "message": "このノートを保存しました。"
+  },
+  "xhsNotFound": {
+    "message": "このノートを特定できませんでした。ノートを開いてから、本文を右クリックしてください。"
+  },
+  "xhsNeedsOpen": {
+    "message": "ノートを開いてから、本文を右クリックしてください。"
+  },
+  "xhsPermissionIntro": {
+    "message": "フィードには複数のノートがあります。ポインタの下にあるノートを覚えるには、小紅書へのアクセスを許可してください。許可したあと、同じノートをもう一度右クリックします。選んだノートだけを、クリップ拡張機能の既定ノートブックに保存します。"
+  },
+  "xhsPermissionToast": {
+    "message": "フィードでノートを選ぶには、小紅書へのアクセスを許可してください。そのあと、もう一度右クリックします。"
+  },
+  "xhsRightClickAgain": {
+    "message": "フィードのノートを識別できるようになりました。そのノートをもう一度右クリックしてください。"
+  },
+  "allowXhsAccess": {
+    "message": "小紅書へのアクセスを許可"
+  },
+  "xhsPermissionDenied": {
+    "message": "アクセスは許可されませんでした。ノートをもう一度右クリックしてやり直してください。"
+  },
+  "xhsPermissionReady": {
+    "message": "許可しました。ページに戻り、そのノートをもう一度右クリックしてください。"
+  },
+  "xhsNoteFallbackTitle": {
+    "message": "小紅書のノート"
+  },
+  "xhsSaveWindowTitle": {
+    "message": "ノートを EdgeEver に保存"
+  },
+  "xhsLocationLabel": {
+    "message": "場所"
+  },
+  "saveZhihuToEdgeEver": {
+    "message": "回答・記事を EdgeEver に保存"
+  },
+  "zhihuQuestionLabel": {
+    "message": "質問"
+  },
+  "zhihuArticleLabel": {
+    "message": "記事"
+  },
+  "zhihuAuthorLabel": {
+    "message": "著者："
+  },
+  "zhihuAnswerLabel": {
+    "message": "回答"
+  },
+  "zhihuArticleBodyLabel": {
+    "message": "本文"
+  },
+  "zhihuSaveHint": {
+    "message": "知乎で回答または記事の本文を右クリックし、「回答・記事を EdgeEver に保存」を選びます。タイトル、著者、本文、画像が 1 件のノートになります。コメントは含めません。画像を右クリックした場合は、その画像だけを保存します。"
+  },
+  "savingZhihu": {
+    "message": "この知乎の回答または記事を保存しています…"
+  },
+  "zhihuSaved": {
+    "message": "この知乎の回答または記事を保存しました。"
+  },
+  "zhihuNotFound": {
+    "message": "この回答または記事を特定できませんでした。本文を右クリックしてください。"
+  },
+  "zhihuUnreadable": {
+    "message": "この回答または記事の本文を読めなかったため、保存しませんでした。"
+  },
+  "zhihuPermissionIntro": {
+    "message": "ページには複数の回答や記事があります。ポインタの下にある一篇を覚えるには、知乎へのアクセスを許可してください。許可したあと、同じ本文をもう一度右クリックします。選んだ一篇だけを、クリップ拡張機能の既定ノートブックに保存します。"
+  },
+  "zhihuPermissionToast": {
+    "message": "一覧で回答または記事を選ぶには、知乎へのアクセスを許可してください。そのあと、もう一度右クリックします。"
+  },
+  "zhihuRightClickAgain": {
+    "message": "ページ上の回答と記事を識別できるようになりました。その本文をもう一度右クリックしてください。"
+  },
+  "allowZhihuAccess": {
+    "message": "知乎へのアクセスを許可"
+  },
+  "zhihuPermissionDenied": {
+    "message": "アクセスは許可されませんでした。本文をもう一度右クリックしてやり直してください。"
+  },
+  "zhihuPermissionReady": {
+    "message": "許可しました。ページに戻り、その本文をもう一度右クリックしてください。"
+  },
+  "zhihuNoteFallbackTitle": {
+    "message": "知乎の回答または記事"
+  },
+  "zhihuSaveWindowTitle": {
+    "message": "回答・記事を EdgeEver に保存"
+  },
+  "saveRedditToEdgeEver": {
+    "message": "Reddit の投稿を EdgeEver に保存"
+  },
+  "savingReddit": {
+    "message": "Reddit の投稿を保存しています…"
+  },
+  "redditSaved": {
+    "message": "Reddit の投稿をノートに保存しました。"
+  },
+  "redditNotFound": {
+    "message": "Reddit の投稿が見つかりません。投稿の上で右クリックしてください。"
+  },
+  "redditRightClickAgain": {
+    "message": "Reddit の投稿を認識できるようになりました。同じ投稿をもう一度右クリックしてください。"
+  },
+  "redditAuthorLabel": {
+    "message": "投稿者"
+  },
+  "redditCommunityLabel": {
+    "message": "コミュニティ"
+  },
+  "redditLinkLabel": {
+    "message": "外部リンク"
   }
 }

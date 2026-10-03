@@ -1,6 +1,6 @@
 <div align="center">
   <h1>
-    <img src="assets/brand/edgeever-icon.svg" alt="EdgeEver Logo" width="40" align="absmiddle" /> EdgeEver
+    <img src="assets/brand/edgeever-icon.svg" alt="EdgeEver Logo" width="48" align="absmiddle" /> EdgeEver
   </h1>
   <p>
     <b>開源、原生支援 AI、可自由部署的自行託管知識庫與 Evernote（印象筆記）替代方案</b>
@@ -44,7 +44,7 @@ EdgeEver 是一款現代化的開源筆記與個人知識庫工作區。它為�
 **EdgeEver 恰好填補了這一空白**：全端開源，雲端同步與自行託管都可自行部署；同時保留經典三欄版面與流暢排版，萬條筆記常駐依然輕盈絲滑，原生支援接入 AI Agent，部署維護零門檻、零費用。
 
 > 💡 **建議做法：**
-> 全平台隨時捕捉靈感與素材，在經典三欄中深度整理沉澱；借助原生 MCP 協定，不僅能讓 AI Agent 隨時檢索與協同思考，還可輕鬆串接 Notion、飛書等外部常用工具鏈；對外一鍵排版發布，完整資料零成本自行託管，打造開放互聯、真正屬於你的智慧第二大腦。
+> 全平台隨時捕捉靈感與素材，在經典三欄中深度整理沉澱；借助原生 MCP 與 ACP 協定，既能讓外部 Agent 隨時檢索與整理筆記，也可在桌面版直接調用本機 AI Agent 深度協同；對外一鍵排版發布，完整資料零成本自行託管，打造開放互聯、真正屬於你的智慧第二大腦。
 
 ## 線上展示
 
@@ -69,8 +69,8 @@ EdgeEver 是一款現代化的開源筆記與個人知識庫工作區。它為�
 - **自由選擇部署方式**：既可免費執行於 Cloudflare Serverless，也可透過 Docker 部署到 VPS、NAS 或家用伺服器。按 Cloudflare 免費儲存額度估算，個人部署可容納約 15 萬條短筆記和約 5 萬張圖片；Docker 儲存可按需擴充，輕鬆承載百萬級筆記與海量圖片。
 - **資料開放，不設圍牆**：以標準 SQLite 儲存，提供 REST API、MCP 與 CLI 介面。資料隨時可讀可匯出，不再擔心被任何特定平台綁定。
 - **無損 ZIP 打包與無縫遷移**：一鍵打包匯出包含 Markdown、Front Matter、巢狀目錄及附件的完整檔案，同時保留歷史版本與結構化資料，方便在不同實例間完整還原。
-- **原生 AI Agent 智慧聯動**：內建 MCP（Model Context Protocol）協定，支援 Claude Code、Codex、Antigravity、WorkBuddy 等 AI Agent 直接讀取與整理筆記，也可與 Notion Database、飛書多維表格輕鬆串接。
-- **接入自己的 AI 模型**：支援新增多個 OpenAI、Anthropic、Gemini 相容服務與第三方中轉平台，在編輯器中隨時對全文或選取範圍進行智慧摘要、重點擷取、文法校對、翻譯與續寫潤飾。
+- **原生 AI Agent 智慧聯動**：內建 MCP（Model Context Protocol）協定，支援外部 AI Agent 直接讀取與整理筆記；同時桌面版支援透過 ACP（Agent Client Protocol）協定直接調用本機執行的 AI Agent（如 Codex、Antigravity、Claude Code、WorkBuddy 等）協同創作。
+- **接入自己的 AI 模型**：支援新增多個 OpenAI、Anthropic、Gemini 相容服務與第三方中轉平台，驅動內建 Agent，在伴侶側邊欄與編輯器中隨時對全文或選取範圍進行智慧摘要、重點擷取、文法校對、翻譯與續寫潤飾。
 - **豐富的外掛 API**：可透過[外掛開發文件](docs/plugin-development.zh-CN.md)擴充 EdgeEver。
 - **多端無縫同步，無裝置限制**：自行託管資料無商業限制，擺脫免費帳號僅限 2 台裝置的束縛，在 PC、平板與手機上隨心同步。
 - **經典三欄版面與專注模式**：筆記本樹、筆記列表與編輯區一目了然；桌面版一鍵開啟專注模式，讓思緒盡情鋪滿螢幕。
@@ -145,8 +145,9 @@ Cloudflare 線上部署可以選擇以下兩種方式之一：
 curl -fsSL https://edgeever.org/install.sh | bash
 ```
 
-此指令會自動拉取最新映像、產生管理員密碼、使用 Docker Compose 啟動
-EdgeEver，並設定每日自動更新。手動部署與設定說明見 [Docker 部署文件](docs/deploy-docker.zh-CN.md)。
+此指令會自動拉取最新映像、產生管理員密碼，並使用 Docker Compose 啟動 EdgeEver。手動部署與設定說明見 [Docker 部署文件](docs/deploy-docker.zh-CN.md)。
+
+安裝後預設每日自動更新。如需手動更新，請在部署伺服器上執行 `~/edgeever/update.sh`。
 
 ---
 
@@ -166,7 +167,7 @@ EdgeEver，並設定每日自動更新。手動部署與設定說明見 [Docker 
 
 - **智慧內文擷取**：自動擷取網頁文章正文並轉為純淨 Markdown，完整保留來源網址與擷取時間。
 - **選取與右鍵擷取**：反白選取文字或右鍵任意圖片直接儲存為獨立筆記，無需抓取整頁多餘內容。
-- **X (Twitter) 推文擷取**：右鍵單則推文自動展開長文全文，連同作者、發布時間與附圖完整歸檔。
+- **社群與平台深度擷取**：深度適配 X (Twitter)、小紅書、知乎、Reddit 與 GitHub，一鍵發送。
 - **自託管隱私直連**：擷取內容直傳個人自託管執行個體，不經過任何第三方伺服器轉發。
 
 ## 社群與回饋
@@ -246,10 +247,10 @@ content_text      搜尋、摘要和索引使用
 
 ## MCP
 
-在 **個人中心** -> **MCP 設定** 中建立 API Token 並交給 AI Agent，即可讓 Agent 在帳號授權範圍內安全地管理你的知識庫。系統同時支援文字筆記與圖表筆記（涵蓋心智圖、流程圖和架構圖三種），支援對這些筆記進行完整的增刪改查；同時還可管理筆記範本與 AI 指令，並與 Notion Database、飛書多維表格等工具聯動。
+在 **個人中心** -> **API / MCP** 中建立 API Token 並一鍵複製 Remote MCP 設定，即可讓 Claude Code、Cursor、Antigravity、OpenClaw 等 AI Agent 在帳號授權範圍內安全管理你的知識庫。系統支援文字筆記、圖表筆記（心智圖、流程圖與架構圖）和多維表格筆記的完整增刪改查，Agent 還可管理筆記本目錄、標籤、附件、歷史版本、筆記範本與 AI 指令。
 
 > 💡 **情境啟發：**
-> 讓 AI 真正成為你的知識管家與創作外腦——不僅能將方案秒級產生為可互動的心智圖與架構圖，還能為 AI Agent 提供私有脈絡。憑藉 EdgeEver 強大的富文字編輯與精美排版能力，AI 協同沉澱的不再是冰冷文字，而是結構工整、排版優雅、隨時可一鍵分發的高品質知識資產。
+> 讓 AI 真正成為你的知識管家與創作外腦——不僅能將方案秒級產生為可互動的心智圖、流程圖、架構圖與多維表格，還能為 AI Agent 提供私有脈絡。憑藉 EdgeEver 強大的富文字編輯與精美排版能力，AI 協同沉澱的不再是冰冷文字，而是結構工整、排版優雅、隨時可一鍵分發的高品質知識資產。
 
 ## 圖片壓縮規則
 
@@ -279,9 +280,8 @@ Web、PWA 與桌面版會在停止編輯 30 秒後上傳筆記，並在頁面可
 
 ## 致謝
 
-- EdgeEver 的筆記產品設計也參考了 [Evernote（印象筆記）](https://evernote.com/) 等成熟筆記工具的公開產品體驗。相關功能由 EdgeEver 獨立設計與實作。
+- EdgeEver 的筆記產品設計也參考了 [Evernote（印象筆記）](https://evernote.com/)、[Notion](https://www.notion.com/) 等成熟筆記工具的公開產品體驗。相關功能由 EdgeEver 獨立設計與實作。
 - 心智圖與視覺化圖表筆記的產品設計參考了 [XMind](https://xmind.com/) 和 [ProcessOn](https://www.processon.com/) 等圖表工具的公開產品體驗。相關功能由 EdgeEver 獨立設計與實作。
-- 編輯器主題的排版架構、標題層級與章節結構參考了 [obsidian-minimal](https://github.com/kepano/obsidian-minimal)、[Outline](https://github.com/outline/outline) 和 [墨格](https://moyufang.cn/editor) 的公開方案。名稱、素材與實作均由 EdgeEver 獨立完成。
 
 ## 商標與品牌使用
 

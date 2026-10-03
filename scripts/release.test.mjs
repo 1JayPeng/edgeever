@@ -27,8 +27,6 @@ import {
   waitForRun,
 } from "./release.mjs";
 
-const readSource = (url) => readFileSync(url, "utf8").replaceAll(String.fromCharCode(13, 10), "\n");
-
 describe("release automation", () => {
   test("prepares and audits the official Docker image with every formal release", () => {
     expect(RELEASE_WORKFLOWS.docker).toBe("docker-image.yml");
@@ -36,7 +34,7 @@ describe("release automation", () => {
 
   test("dispatches a unified post-release endpoint timing report", () => {
     expect(RELEASE_WORKFLOWS.timings).toBe("release-timings.yml");
-    const releaseSource = readSource(new URL("./release.mjs", import.meta.url));
+    const releaseSource = readFileSync(new URL("./release.mjs", import.meta.url), "utf8");
     expect(releaseSource).toContain("desktop_run_id=\${desktopRunId}");
     expect(releaseSource).toContain("mobile_run_id=\${mobileRunId}");
     expect(releaseSource).toContain("docker_run_id=\${dockerRunId}");
@@ -46,7 +44,7 @@ describe("release automation", () => {
   });
 
   test("blocks publication until the Draft Android APK passes the Play signature gate", () => {
-    const releaseSource = readSource(new URL("./release.mjs", import.meta.url));
+    const releaseSource = readFileSync(new URL("./release.mjs", import.meta.url), "utf8");
     const signatureGate = releaseSource.indexOf('label: "Draft Android Play signature gate"');
     const publication = releaseSource.indexOf('"--draft=false"');
 
@@ -56,7 +54,7 @@ describe("release automation", () => {
   });
 
   test("blocks publication until the offline-signed Windows update passes an independent audit", () => {
-    const releaseSource = readSource(new URL("./release.mjs", import.meta.url));
+    const releaseSource = readFileSync(new URL("./release.mjs", import.meta.url), "utf8");
     const signing = releaseSource.indexOf("signDraftWindowsUpdate({");
     const audit = releaseSource.indexOf('label: "Draft signed Windows update audit"');
     const publication = releaseSource.indexOf('"--draft=false"');
@@ -78,7 +76,7 @@ describe("release automation", () => {
   });
 
   test("checks the offline Windows key before creating release state", () => {
-    const releaseSource = readSource(new URL("./release.mjs", import.meta.url));
+    const releaseSource = readFileSync(new URL("./release.mjs", import.meta.url), "utf8");
     const releaseMain = releaseSource.indexOf("const releaseMain = async");
     const keyCheck = releaseSource.indexOf("assertWindowsUpdateSigningKey({", releaseMain);
     const issueCreation = releaseSource.indexOf('"issue",\n      "create"', releaseMain);
@@ -87,7 +85,7 @@ describe("release automation", () => {
   });
 
   test("starts Play delivery as soon as Android preparation finishes", () => {
-    const releaseSource = readSource(new URL("./release.mjs", import.meta.url));
+    const releaseSource = readFileSync(new URL("./release.mjs", import.meta.url), "utf8");
     const androidReady = releaseSource.lastIndexOf("const androidReleaseReady");
     const mobileWait = releaseSource.indexOf('label: "Draft Android assets"', androidReady);
     const playDelivery = releaseSource.indexOf("await ensurePlayDelivery", androidReady);
@@ -100,7 +98,7 @@ describe("release automation", () => {
   });
 
   test("starts App Store delivery from the native iOS tree without blocking GitHub publication", () => {
-    const releaseSource = readSource(new URL("./release.mjs", import.meta.url));
+    const releaseSource = readFileSync(new URL("./release.mjs", import.meta.url), "utf8");
     const iosPlan = releaseSource.indexOf('planNativeRelease("ios"');
     const iosDispatch = releaseSource.indexOf("startIosStoreDelivery(");
     const publication = releaseSource.indexOf('"--draft=false"');
@@ -509,7 +507,7 @@ describe("release automation", () => {
   });
 
   test("persists localized in-app release changes when preparing versions", () => {
-    const releaseSource = readSource(new URL("./release.mjs", import.meta.url));
+    const releaseSource = readFileSync(new URL("./release.mjs", import.meta.url), "utf8");
     const updateCall = releaseSource.indexOf("const versionPaths = updateReleaseVersions({");
     const localizedChanges = releaseSource.indexOf(
       "localizedChanges: options.localizedChanges",

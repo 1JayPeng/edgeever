@@ -227,6 +227,7 @@ describe("Cloudflare deployment entrypoints", () => {
 
   test("rejects instance-specific values in the repository Wrangler config", () => {
     const repositoryConfig = readRepositoryFile("wrangler.toml");
+    expect(repositoryConfig).toContain('[version_metadata]\nbinding = "CF_VERSION_METADATA"');
     const instanceConfigs = [
       repositoryConfig.replace('name = "edgeever"', 'name = "my-notes"'),
       repositoryConfig.replace("workers_dev = true", "workers_dev = false"),
@@ -495,31 +496,22 @@ describe("Cloudflare deployment entrypoints", () => {
     expect(workflow).toContain("Prefer this workflow over GitHub **Sync fork**");
   });
 
-  test("forks skip every workflow job except upstream updates and the explicitly named release workflow", () => {
+  test("forks skip every workflow job except upstream updates", () => {
     const workflowsDirectory = resolve(repositoryRoot, ".github/workflows");
     const workflowFiles = readdirSync(workflowsDirectory)
       .filter((file) => /\.ya?ml$/.test(file))
       .filter((file) => file !== "sync-edgeever-upstream.yml");
-    const forkReleaseWorkflow = "fork-release.yml";
 
-    expect(workflowFiles).toContain(forkReleaseWorkflow);
     for (const file of workflowFiles) {
       const workflow = readRepositoryFile(`.github/workflows/${file}`);
       const jobs = workflow.slice(workflow.indexOf("\njobs:\n") + "\njobs:\n".length);
       const jobStarts = [...jobs.matchAll(/^  ([A-Za-z0-9_-]+):\s*$/gm)];
-      const allowedRepository = file === forkReleaseWorkflow
-        ? "github.repository == '1JayPeng/edgeever'"
-        : "github.repository == 'tianma-if/edgeever'";
 
-      if (file === forkReleaseWorkflow) {
-        expect(workflow).toContain("workflow_dispatch:");
-        expect(workflow).toContain("permissions:\n  contents: read");
-      }
       expect(jobStarts.length).toBeGreaterThan(0);
       for (const [index, match] of jobStarts.entries()) {
         const nextJob = jobStarts[index + 1];
         const job = jobs.slice(match.index, nextJob?.index);
-        expect(job).toContain(allowedRepository);
+        expect(job).toContain("github.repository == 'tianma-if/edgeever'");
       }
     }
   });

@@ -1,6 +1,6 @@
 <div align="center">
   <h1>
-    <img src="assets/brand/edgeever-icon.svg" alt="EdgeEver Logo" width="40" align="absmiddle" /> EdgeEver
+    <img src="assets/brand/edgeever-icon.svg" alt="EdgeEver Logo" width="48" align="absmiddle" /> EdgeEver
   </h1>
   <p>
     <b>开源、原生支持 AI、可自由部署的自托管知识库与「印象笔记」替代方案</b>
@@ -44,7 +44,7 @@ EdgeEver 是一款现代化的开源笔记与个人知识库工作区。它为�
 **EdgeEver 恰好填补了这一空白**：整栈开源，云同步与自托管都可自行部署；同时保留经典三栏布局与流畅排版，万条笔记常驻依然轻盈丝滑，原生支持接入 AI Agent，部署维护零门槛、零费用。
 
 > 💡 **最佳实践推荐：**
-> 全端随时捕捉灵感与素材，在经典三栏中深度整理沉淀；借助原生 MCP 协议，不仅能让 AI Agent 随时检索与协同思考，还可轻松打通 Notion、飞书等外部常用工具链；对外一键排版发布，全量数据 0 成本自托管，打造开放互联、真正属于你的智能第二大脑。
+> 全端随时捕捉灵感与素材，在经典三栏中深度整理沉淀；借助原生 MCP 与 ACP 协议，既能让外部 Agent 随时检索与整理笔记，也可在桌面端直接调用本机 AI Agent 深度协同；对外一键排版发布，全量数据 0 成本自托管，打造开放互联、真正属于你的智能第二大脑。
 
 ## 在线演示
 
@@ -69,8 +69,8 @@ EdgeEver 是一款现代化的开源笔记与个人知识库工作区。它为�
 - **自由选择部署方式**：既可免费运行于 Cloudflare Serverless，也可通过 Docker 部署到 VPS、NAS 或家庭服务器。按 Cloudflare 免费存储额度估算，个人部署可容纳约 15 万条短笔记和约 5 万张图片；Docker 存储可按需扩展，轻松承载百万级笔记与海量图片。
 - **数据开放，不设围墙**：基于标准 SQLite 存储，提供 REST API、MCP 与 CLI 接口。数据随时可读可导，不再担心被任何特定平台绑定。
 - **无损 ZIP 打包与无缝迁移**：一键打包导出包含 Markdown、Front Matter、嵌套目录及附件的完整档案，同时保留历史版本与结构化数据，方便在不同实例间完整还原。
-- **原生 AI Agent 智脑联动**：内置 MCP（Model Context Protocol）协议，支持 Claude Code、Codex、Antigravity、WorkBuddy 等 AI Agent 直接读取与整理笔记，也可与 Notion Database、飞书多维表格轻松打通。
-- **接入自己的 AI 模型**：支持添加多个 OpenAI、Anthropic、Gemini 兼容服务与第三方中转平台，在编辑器中随时对全文或选区进行智能总结、要点提炼、语法校对、翻译与续写润色。
+- **原生 AI Agent 智脑联动**：内置 MCP（Model Context Protocol）协议，支持外部 AI Agent 直接读取与整理笔记；同时桌面端支持通过 ACP（Agent Client Protocol）协议直接调用本机运行的 AI Agent（如 Codex、Antigravity、Claude Code、WorkBuddy 等）协同创作。
+- **接入自己的 AI 模型**：支持添加多个 OpenAI、Anthropic、Gemini 兼容服务与第三方中转平台，驱动内置 Agent，在伴侣侧边栏与编辑器中随时对全文或选区进行智能总结、要点提炼、语法校对、翻译与续写润色。
 - **丰富的插件 API**：可通过[插件开发文档](docs/plugin-development.zh-CN.md)扩展 EdgeEver。
 - **多端无缝同步，无设备限制**：自托管数据无商业限制，摆脱免费账号仅限 2 台设备的束缚，在 PC、平板与手机上随心同步。
 - **经典三栏布局与专注模式**：笔记本树、笔记列表与编辑区一目了然；桌面端一键开启专注模式，让思绪尽情铺满屏幕。
@@ -133,7 +133,7 @@ Cloudflare 在线部署可以选择以下两种方式之一：
 
 > 📖 包含具体参数与构建命令的详细步骤，请查看 [在线部署完整文档](docs/deploy-cloudflare-button.zh-CN.md)。
 
-> 💡 **域名与访问**：实例部署完成后，可以直接使用 Cloudflare 默认分配的 `*.workers.dev` 域名访问，也可以在 Worker 的 **Settings → Domains & Routes** 中绑定自己的自定义域名。
+> 💡 **域名与访问**：实例部署完成后，可以直接使用 Cloudflare 默认分配的 `*.workers.dev` 域名访问，也可以在 Worker 的 **Settings → Domains & Routes** 中绑定自己的自定义域名（强烈建议绑定自定义域名以保障国内直连稳定性并提升访问速度）。
 
 > 💡 **Cloudflare R2 开通**：虽然 Cloudflare R2 存储提供了足够慷慨、在笔记场景中完全不会超量的[免费存储额度](https://developers.cloudflare.com/r2/pricing/#free-tier)，但需先开通 R2 subscription 并绑定付款方式。Cloudflare [官方支持](https://developers.cloudflare.com/billing/get-started/update-billing-info/#supported-payment-methods) 银联（UnionPay）、Visa、Mastercard 等银行卡，以及 PayPal、Apple Pay、Google Pay 等付款方式。
 
@@ -145,8 +145,9 @@ Cloudflare 在线部署可以选择以下两种方式之一：
 curl -fsSL https://edgeever.org/install.sh | bash
 ```
 
-该命令会自动拉取最新镜像、生成管理员密码、使用 Docker Compose 启动
-EdgeEver，并设置每日自动更新。手动部署与配置说明见 [Docker 部署文档](docs/deploy-docker.zh-CN.md)。
+该命令会自动拉取最新镜像、生成管理员密码，并使用 Docker Compose 启动 EdgeEver。手动部署与配置说明见 [Docker 部署文档](docs/deploy-docker.zh-CN.md)。
+
+安装后默认每日自动更新。如需手动更新，请在部署服务器上运行 `~/edgeever/update.sh`。
 
 > 💡 **网络提示**：官方镜像托管于 GitHub（GHCR）。若在部分网络环境下遇到拉取缓慢或超时，请在部署前自行配置可用的网络代理或可信的镜像加速服务。
 
@@ -168,7 +169,7 @@ EdgeEver，并设置每日自动更新。手动部署与配置说明见 [Docker 
 
 - **智能正文提取**：自动提取网页文章正文并转为纯净 Markdown，自动保留来源网址与剪藏时间。
 - **划选与右键剪藏**：选中局部文字或右键任意图片直接存为独立笔记，无需抓取整页冗余内容。
-- **X (Twitter) 推文剪藏**：右键单条推文自动展开长文全文，连同作者、发布时间与配图完整归档。
+- **社媒与社区深度剪藏**：深度适配 X (Twitter)、小红书、知乎、Reddit 与 GitHub，一键发送。
 - **自托管隐私直连**：剪藏内容直传个人自托管实例，不经过任何第三方服务器中转。
 
 ## 社区与反馈
@@ -248,10 +249,10 @@ content_text      搜索、摘要和索引使用
 
 ## MCP
 
-在 **个人中心** -> **MCP 设置** 中创建 API Token 并交给 AI Agent，即可让 Agent 在账号授权范围内安全地管理你的知识库。系统同时支持文本笔记与图表笔记（涵盖思维导图、流程图和架构图三种），支持对这些笔记进行完整的增删改查；同时还可管理笔记模板与 AI 指令，并与 Notion Database、飞书多维表格等工具联动。
+在 **个人中心** -> **API / MCP** 中创建 API Token 并一键复制 Remote MCP 配置，即可让 Claude Code、Cursor、Antigravity、OpenClaw 等 AI Agent 在账号授权范围内安全管理你的知识库。系统支持文本笔记、图表笔记（思维导图、流程图与架构图）和多维表格笔记的完整增删改查，Agent 还可管理笔记本目录、标签、附件、历史版本、笔记模板与 AI 指令。
 
 > 💡 **场景启发：**
-> 让 AI 真正成为你的知识管家与创作外脑——不仅能将方案秒级生成为可交互的思维导图与架构图，还能为 AI Agent 提供私有上下文。依托 EdgeEver 强大的富文本编辑与精美排版能力，AI 协同沉淀的不再是冰冷文本，而是结构工整、排版优雅、随时可一键分发的高品质知识资产。
+> 让 AI 真正成为你的知识管家与创作外脑——不仅能将方案秒级生成为可交互的思维导图、流程图、架构图与多维表格，还能为 AI Agent 提供私有知识上下文。依托 EdgeEver 强大的富文本编辑与精美排版能力，AI 协同沉淀的不再是冰冷文本，而是结构工整、排版优雅、随时可一键分发的高品质知识资产。
 
 ## 图片压缩规则
 
@@ -281,9 +282,8 @@ Web、PWA 与桌面端会在停止编辑 30 秒后上传笔记，并在页面可
 
 ## 致谢
 
-- EdgeEver 的笔记产品设计也参考了 [Evernote（印象笔记）](https://evernote.com/) 等成熟笔记工具的公开产品体验。相关功能由 EdgeEver 独立设计与实现。
+- EdgeEver 的笔记产品设计也参考了 [Evernote（印象笔记）](https://evernote.com/)、[Notion](https://www.notion.com/) 等成熟笔记工具的公开产品体验。相关功能由 EdgeEver 独立设计与实现。
 - 思维导图与可视化图表笔记的产品设计参考了 [XMind](https://xmind.com/) 和 [ProcessOn](https://www.processon.com/) 等图表工具的公开产品体验。相关功能由 EdgeEver 独立设计与实现。
-- 编辑器主题的排版架构、标题层级与章节结构参考了 [obsidian-minimal](https://github.com/kepano/obsidian-minimal)、[Outline](https://github.com/outline/outline) 和 [墨格](https://moyufang.cn/editor) 的公开方案。名称、素材与实现均由 EdgeEver 独立完成。
 
 ## 商标与品牌使用
 

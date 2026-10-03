@@ -32,7 +32,7 @@ export type SystemInfoItem = {
   localOnly?: boolean;
 };
 
-type InstanceSystemDiagnostics = Pick<InstanceHealth, "build" | "containerImageSource" | "deployment" | "migration" | "objectStorageProvider" | "storage"> & {
+type InstanceSystemDiagnostics = Pick<InstanceHealth, "build" | "containerImageSource" | "deployment" | "deploymentVersionCreatedAt" | "migration" | "objectStorageProvider" | "storage"> & {
   runtime?: string | null;
 };
 
@@ -162,6 +162,12 @@ const getWebSystemInfoGroups = (
           mono: true,
         },
         { label: t("systemInfo.instanceBuild"), value: diagnostics.instance?.build ?? t("systemInfo.unknown"), mono: true },
+        {
+          label: t("systemInfo.deploymentVersionTime"),
+          value: diagnostics.instance?.deploymentVersionCreatedAt && Number.isFinite(Date.parse(diagnostics.instance.deploymentVersionCreatedAt))
+            ? new Intl.DateTimeFormat(language, { dateStyle: "medium", timeStyle: "short" }).format(new Date(diagnostics.instance.deploymentVersionCreatedAt))
+            : t("systemInfo.unknown"),
+        },
         { label: t("systemInfo.databaseMigration"), value: diagnostics.instance?.migration ?? t("systemInfo.unknown"), mono: true },
         {
           label: t("systemInfo.databaseBackend"),
@@ -269,7 +275,7 @@ export const SystemInfoPanel = ({ active = true }: { active?: boolean }) => {
   const [desktopUpdateChecked, setDesktopUpdateChecked] = useState(false);
   const [viewportRevision, setViewportRevision] = useState(0);
   const queryClient = useQueryClient();
-  const { release } = useDeployedUpdateNotice();
+  const { markSeen, release } = useDeployedUpdateNotice();
   const desktopBridge = window.edgeeverDesktop;
   const desktopAvailable = desktopBridge?.isAvailable === true;
   const instanceUrl = desktopAvailable ? getConfiguredDesktopApiBaseUrl() : window.location.origin;
@@ -305,6 +311,9 @@ export const SystemInfoPanel = ({ active = true }: { active?: boolean }) => {
     refetchInterval: (query) => query.state.data?.state === "available" ? 1_000 : false,
     retry: 1,
   });
+  useEffect(() => {
+    if (active) markSeen();
+  }, [active, markSeen]);
   useEffect(() => {
     if (!active) return;
     const onResize = () => setViewportRevision((value) => value + 1);

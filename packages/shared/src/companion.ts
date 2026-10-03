@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isAiTextAttachment, type AiAttachmentMediaType } from "./ai-assistant";
 
 export const CompanionIdSchema = z.string().uuid();
 export const CompanionMemoryInputSchema = z.object({
@@ -36,8 +37,59 @@ export const CompanionTurnInputSchema = z.object({
   locale: z.enum(["zh-CN", "en-US", "ja"]).default("en-US"),
   focus: CompanionTurnFocusSchema.optional(),
   mentions: z.array(CompanionMentionSchema).max(8).optional(),
+  attachmentIds: z.array(z.string().uuid()).max(4).optional(),
 }).strict();
 export type CompanionTurnInput = z.infer<typeof CompanionTurnInputSchema>;
+
+type ConversationLanguage = CompanionTurnInput["locale"];
+
+const messageLanguage = (message: string): ConversationLanguage | null => {
+  // The request normally precedes pasted or quoted source text.
+  const request = message.trim().split(/[\n:：]/, 1)[0].slice(0, 200);
+  // Sidebar translation actions generate localized prompts. Their wording is
+  // interface text, not evidence of the user's conversation language.
+  if (/^(?:请翻译我正在看的内容|请翻译下面这段文字|Translate what I'm looking at|Translate the passage below|今見ている内容を翻訳|下の文章を)/iu.test(request)) return null;
+  if (/[\p{Script=Hiragana}\p{Script=Katakana}]/u.test(request)) return "ja";
+  if (/\p{Script=Han}/u.test(request)) return "zh-CN";
+  if (/[A-Za-z]{2,}/u.test(request)) return "en-US";
+  return null;
+};
+
+export const conversationLanguage = (
+  message: string, recentUserMessages: readonly string[], fallbackLocale: ConversationLanguage,
+): { locale: ConversationLanguage; source: "current request" | "recent conversation" | "interface" } => {
+  const current = messageLanguage(message);
+  if (current) return { locale: current, source: "current request" };
+  for (const prior of recentUserMessages.slice(0, 6)) {
+    const language = messageLanguage(prior);
+    if (language) return { locale: language, source: "recent conversation" };
+  }
+  return { locale: fallbackLocale, source: "interface" };
+};
+
+export const translationTargetInstruction = (
+  language: ReturnType<typeof conversationLanguage>,
+): string => {
+  const name = language.locale === "zh-CN" ? "Simplified Chinese" : language.locale === "ja" ? "Japanese" : "English";
+  return `For a translation request without an explicit target language, use the language of the current user request, then recent user messages, and only then the interface language. The best available signal for this turn is ${name} (${language.source}). If the source text is mainly in another language, translate into ${name} without asking. If the source is already mainly in ${name}, use an explicit target from this same translation task; otherwise ask which other language the user wants. An explicit target for this text always takes precedence; an older request about different text does not.`;
+};
+
+export type CompanionModelContentPart =
+  | { type: "text"; text: string }
+  | { type: "image"; image: string; mediaType: string }
+  | { type: "file"; data: string; mediaType: string; filename?: string };
+
+export const COMPANION_NOTE_EDIT_MAX_CHARS = 200_000;
+
+export const companionSupportsAttachment = (
+  provider: "openai-compatible" | "anthropic" | "google",
+  mediaType: string,
+) => {
+  if (isAiTextAttachment(mediaType as AiAttachmentMediaType)) return true;
+  if (mediaType === "image/jpeg" || mediaType === "image/png" || mediaType === "image/webp" || mediaType === "image/gif") return true;
+  if (mediaType === "application/pdf") return provider === "anthropic" || provider === "google";
+  return false;
+};
 
 export const CompanionQuestionSchema = z.object({
   id: z.string().trim().min(1).max(80),
@@ -87,7 +139,7 @@ export type CompanionToolDefinition = {
 };
 export type CompanionPreparedMessage = {
   role: "user" | "assistant";
-  content: string;
+  content: string | CompanionModelContentPart[];
 };
 export type CompanionPreparedTurn = {
   turn: CompanionTurn;
@@ -142,6 +194,12 @@ export type CompanionMemory = {
   updatedAt: string;
 };
 export type CompanionSource = { id: string; title: string; revision: number; notebookId?: string };
+export type CompanionTurnAttachmentMeta = {
+  id: string;
+  filename: string;
+  mediaType: string;
+  byteLength: number;
+};
 
 export const CompanionDiscoverySettingsInputSchema = z.object({
   enabled: z.boolean(),
@@ -229,7 +287,7 @@ export type CompanionAction = {
   resultMemoId: string | null;
   resultNotebookId?: string | null;
   result?: unknown;
-  preview?: { notebooks: Array<{ id: string; name: string }>; affectedCount?: number };
+  preview?: { notebooks: Array<{ id: string; name: string }>; affectedCount?: number; baseContentMarkdown?: string };
   createdAt: string;
 };
 export type CompanionTurn = {
@@ -244,6 +302,7 @@ export type CompanionTurn = {
   todos: CompanionTodo[];
   questions: CompanionQuestion[];
   mentions: CompanionMention[];
+  attachments?: CompanionTurnAttachmentMeta[];
   model: string;
   inputTokens: number | null;
   outputTokens: number | null;

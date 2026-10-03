@@ -46,7 +46,7 @@ import {
 } from "./backup-service";
 import { sha256, sha256Bytes } from "./hash-utils";
 import { INSTANCE_BUILD_ID } from "./instance-build";
-import { resolveInstanceDeploymentMetadata } from "./instance-deployment";
+import { resolveDeploymentVersionCreatedAt, resolveInstanceDeploymentMetadata } from "./instance-deployment";
 import type {
   DatabaseAdapter,
   PreparedStatementAdapter,
@@ -233,6 +233,7 @@ app.get("/api/health", async (c) => {
     authMode,
     build: INSTANCE_BUILD_ID.slice(0, 12),
     deployment: resolveInstanceDeploymentMetadata(c.env),
+    deploymentVersionCreatedAt: resolveDeploymentVersionCreatedAt(c.env),
     migration: await getAppliedMigration(c.env),
     storage: {
       database: c.env.storage.diagnostics.database,
@@ -441,6 +442,7 @@ const worker = {
     return fetchEdgeEverApp(request, {
       ...env,
       storage: createCloudflareStorageAdapter(env),
+      deploymentVersionCreatedAt: env.CF_VERSION_METADATA?.timestamp,
       // workerd's default Internet egress checks resolved addresses against its public-only network policy.
       publicNetworkFetch: (url, init) => fetch(url, init),
     }, ctx);
@@ -498,6 +500,9 @@ const isDemoMode = (env: Bindings) => isDemoModeEnabled(env.EDGE_EVER_DEMO_MODE)
 const isLocalDemoSeedEnabled = (env: Bindings) =>
   env.EDGE_EVER_LOCAL_DEMO_SEED?.trim().toLowerCase() === "true";
 
+const rotateWorkspaceSyncIdentity = (db: Bindings["storage"]["db"], at: string) =>
+  db.prepare(`UPDATE workspaces SET created_at = ?`).bind(at).run();
+
 let localDemoSeedPromise: Promise<void> | null = null;
 
 const ensureLocalDemoSeed = (env: Bindings) => {
@@ -513,6 +518,10 @@ const ensureLocalDemoSeed = (env: Bindings) => {
     ]);
 
     await ensureDemoSeed(env, { overwriteExisting: true, refreshResources: true });
+    // The wipe deletes the changelog before the memo deletes, so a browser
+    // already caught up never sees those deletes. A new sync identity forces
+    // that browser to rebuild from this snapshot instead of keeping the old notes.
+    await rotateWorkspaceSyncIdentity(env.storage.db, isoNow());
     await audit(env.storage.db, "system", null, "demo.local_seed", "demo", "edgeever-local", {
       seedMemoCount: DEMO_SEED_MEMOS.length,
       mode: "sync-seed",
@@ -918,6 +927,7 @@ const resetDemoData = async (
     await db.batch(resetStatements);
 
     await ensureDemoSeed(env, { overwriteExisting: true, refreshResources: true });
+    await rotateWorkspaceSyncIdentity(db, isoNow());
     await audit(db, "system", null, "demo.reset", "demo", "edgeever-demo", {
       scheduledTime: new Date(scheduledTime).toISOString(),
       seedMemoCount: DEMO_SEED_MEMOS.length,

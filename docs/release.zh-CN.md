@@ -41,12 +41,9 @@ bun run release -- \
 公开 Release 说明。公开说明只包含用户可感知的变化、影响和必要的迁移提醒。
 
 使用 `--dry-run` 查看提交覆盖、原生端重建计划和说明。发布完成后不会下载、
-安装或启动 macOS 应用；已安装的 macOS、Linux 以及已从本 Fork 完成首次安装的
-Windows 客户端可通过应用内自动更新获取新版。现有上游 Windows 客户端固定上游
-更新源和签名密钥，必须手动安装首个 Fork Release；详见
-[Windows 预览版安全与更新说明](windows-preview.zh-CN.md)。Linux 预览版发布前必须
-通过真实 AppImage 跨版本更新验证。仅在确实需要原有安装验收时显式传入
-`--install-desktop`。
+安装或启动 macOS 应用；已安装的 macOS、Windows 与 Linux 桌面端通过应用内自动
+更新机制获取新版。Linux 预览版发布前必须通过真实 AppImage 跨版本更新验证。仅在
+确实需要原有安装验收时显式传入 `--install-desktop`。
 
 ## EdgeEver 特有规则
 
@@ -77,6 +74,10 @@ Windows 客户端可通过应用内自动更新获取新版。现有上游 Windo
   GitHub Release 保持已发布，跟踪 Issue 保持已关闭；用
   `bun run publish:stores -- --release vX.Y.Z --platform ios` 重试即可。详见
   [移动端商店交付](store-delivery.zh-CN.md)。
+- 网页剪藏插件的商店提交是官方仓库里的独立工作流。提高
+  `apps/extension/package.json` 的版本后，运行 **Submit Web Clipper**。
+  它不属于 `bun run release`，审核结果也不会改变 GitHub Release。详见
+  [网页剪藏插件商店提交](extension-store.zh-CN.md)。
 - 公开发布后的桌面和 Android 审计通过 Release API URL 读取文件名并下载安装包。
   Draft 刚公开时，`gh release view --json assets` 和 `gh release download`
   可能持续看不到这些文件；如果把空列表当成资产缺失，发布会被退回 Draft。

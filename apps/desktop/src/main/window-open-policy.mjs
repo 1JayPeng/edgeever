@@ -1,10 +1,5 @@
-
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-
-const ZOTERO_URL = /^zotero:\/\/(?:select|open-pdf)\/library\/items\/[A-Za-z0-9]{1,32}$/;
-
-export const isAllowedZoteroUrl = (targetUrl) => typeof targetUrl === "string" && ZOTERO_URL.test(targetUrl);
 
 export const isAllowedPrintPreviewUrl = (targetUrl, appUrl) => {
   try {

@@ -31,6 +31,35 @@ describe("extension manifests", () => {
           js: ["assets/tweet-target.js"],
           run_at: "document_start",
         },
+        {
+          matches: [
+            "https://www.xiaohongshu.com/*",
+            "https://xiaohongshu.com/*",
+          ],
+          js: ["assets/xhs-target.js"],
+          run_at: "document_start",
+        },
+        {
+          matches: [
+            "https://www.zhihu.com/*",
+            "https://zhihu.com/*",
+            "https://zhuanlan.zhihu.com/*",
+            "https://www.zhuanlan.zhihu.com/*",
+          ],
+          js: ["assets/zhihu-target.js"],
+          run_at: "document_start",
+        },
+        {
+          matches: [
+            "https://reddit.com/*",
+            "https://www.reddit.com/*",
+            "https://old.reddit.com/*",
+            "https://new.reddit.com/*",
+            "https://sh.reddit.com/*",
+          ],
+          js: ["assets/reddit-target.js"],
+          run_at: "document_start",
+        },
       ]);
     }
   });

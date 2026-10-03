@@ -29,7 +29,7 @@ import {
   mountedInstallerCandidates,
 } from "./installation-location.mjs";
 import { userDataDirectoryFromArguments } from "./user-data-directory.mjs";
-import { isAllowedPrintPreviewUrl, isAllowedZoteroUrl } from "./window-open-policy.mjs";
+import { isAllowedPrintPreviewUrl } from "./window-open-policy.mjs";
 import { showWindow } from "./window-visibility.mjs";
 import { trayIconPath } from "./tray-icon.mjs";
 import { writeImageClipboard, writeRichClipboard, writeTextClipboard } from "./clipboard-write.mjs";
@@ -48,6 +48,7 @@ import {
 import electronUpdater from "electron-updater";
 import { createPluginPublicNetworkRuntime } from "./plugin-public-network.mjs";
 import { createAiDirectRuntime } from "./ai-direct.mjs";
+import { createAcpHostRuntime, registerAcpIpc } from "./acp-host.mjs";
 import { shouldQuitAfterAllWindowsClosed } from "./window-lifecycle.mjs";
 import {
   RENDERER_HIBERNATE_PREPARE_TIMEOUT_MS,
@@ -1414,13 +1415,13 @@ const createWindow = async () => {
         },
       };
     }
-    if (url.startsWith("https://") || url.startsWith("http://") || isAllowedZoteroUrl(url)) void shell.openExternal(url);
+    if (url.startsWith("https://") || url.startsWith("http://")) void shell.openExternal(url);
     return { action: "deny" };
   });
   mainWindow.webContents.on("will-navigate", (event, url) => {
     if (url.startsWith(webUrl) || url.startsWith(`${DESKTOP_APP_ORIGIN}/`) || url.startsWith("edgeever-resource://") || url.startsWith("edgeever-staged://")) return;
     event.preventDefault();
-    if (url.startsWith("https://") || url.startsWith("http://") || isAllowedZoteroUrl(url)) void shell.openExternal(url);
+    if (url.startsWith("https://") || url.startsWith("http://")) void shell.openExternal(url);
   });
   buildApplicationMenu();
 };
@@ -1593,6 +1594,29 @@ const startApplication = async () => {
   ipcMain.on("desktop:ai-direct-cancel", (event, requestId) => {
     if (event.sender === mainWindow?.webContents && typeof requestId === "string") aiDirect.cancel(requestId);
   });
+  const acpRuntime = registerAcpIpc(ipcMain, createAcpHostRuntime({
+    adapterStore: join(app.getPath("userData"), "acp-adapters"),
+    mcpScriptPath: app.isPackaged
+      ? join(process.resourcesPath, "mcp-bridge", "edgeever-mcp-stdio.mjs")
+      : join(projectRoot, "scripts", "edgeever-mcp-stdio.mjs"),
+    mcpAccess: () => {
+      const baseUrl = configuredApiBaseUrl;
+      const sessionToken = desktopSessionToken;
+      const accountId = activeAccountId;
+      return {
+        baseUrl,
+        sessionToken,
+        accountId,
+        isCurrent: () => configuredApiBaseUrl === baseUrl && desktopSessionToken === sessionToken && activeAccountId === accountId,
+      };
+    },
+  }), { allowInstall: (sender) => sender === mainWindow?.webContents });
+  await acpRuntime.pruneAdapters().catch(() => {});
+  const refreshAdapters = () => { void acpRuntime.installDetected().catch(() => []).then(() => acpRuntime.updateInstalled()).catch(() => {}); };
+  const firstAdapterRefresh = setTimeout(refreshAdapters, 10_000);
+  firstAdapterRefresh.unref?.();
+  const adapterRefreshInterval = setInterval(refreshAdapters, 24 * 60 * 60 * 1000);
+  adapterRefreshInterval.unref?.();
   ipcMain.handle("desktop:sync-scheduled-tasks", async (event, tasks) => {
     if (event.sender !== mainWindow?.webContents) throw new Error("Scheduled tasks must come from the main window");
     if (!Array.isArray(tasks) || tasks.length > 1_000) throw new Error("Invalid scheduled task list");

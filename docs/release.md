@@ -43,14 +43,11 @@ contain only user-visible changes, impact, and necessary migration guidance.
 
 Use `--dry-run` to inspect commit coverage, the native rebuild plan, and notes.
 After publication, the command does not download, install, or launch the macOS
-application. Existing macOS and Linux installations, plus Windows installations
-already bootstrapped from this fork, receive new versions through the in-app
-automatic updater. Existing upstream Windows installations must manually install
-the first fork Release because they pin the upstream feed and signing key; see
-[Windows Preview security and updates](windows-preview.md). Linux Preview
-releases must pass a real AppImage-to-AppImage transition through the
-cross-version gate. Pass `--install-desktop` explicitly only when the previous
-installation check is actually needed.
+application. Existing macOS, Windows, and Linux installations receive new
+versions through the in-app automatic updater. Linux Preview releases must pass
+a real AppImage-to-AppImage transition through the cross-version gate. Pass
+`--install-desktop` explicitly only when the previous installation check is
+actually needed.
 
 ## EdgeEver-Specific Behavior
 
@@ -90,6 +87,10 @@ installation check is actually needed.
   Issue closed; retry with
   `bun run publish:stores -- --release vX.Y.Z --platform ios`. See
   [Mobile Store Delivery](store-delivery.md).
+- Web Clipper store submission is a separate official-repository workflow.
+  Run **Submit Web Clipper** after increasing `apps/extension/package.json`.
+  It does not run as part of `bun run release`, and its review does not change
+  a GitHub Release. See [Web Clipper store submission](extension-store.md).
 - Published desktop and Android audits read asset names and download
   installers through the release API URL. `gh release view --json assets` and
   `gh release download` can stay empty after a draft is published, and treating

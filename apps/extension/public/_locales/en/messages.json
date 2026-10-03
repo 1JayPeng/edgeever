@@ -11,8 +11,14 @@
   "webClipper": {
     "message": "Web Clipper"
   },
-  "popupDescription": {
-    "message": "Clip the current page or selection. Right-click selected text to save that passage, right-click an image to save it, or right-click a post on X to save that post."
+  "supportedPlatformsLabel": {
+    "message": "Tailored clipping support:"
+  },
+  "platformXiaohongshu": {
+    "message": "Xiaohongshu"
+  },
+  "platformZhihu": {
+    "message": "Zhihu"
   },
   "saveCurrentPage": {
     "message": "Clip current page"
@@ -34,6 +40,9 @@
   },
   "optionsTitle": {
     "message": "EdgeEver Web Clipper settings"
+  },
+  "optionsSubtitle": {
+    "message": "Configure your self-hosted EdgeEver instance connection and default notebook."
   },
   "diagnosticsTitle": {
     "message": "About & diagnostics"
@@ -159,6 +168,12 @@
   "capturedAtLabel": {
     "message": "Captured at"
   },
+  "googleSearchLabel": {
+    "message": "Google Search"
+  },
+  "searchKeywordLabel": {
+    "message": "Keyword"
+  },
   "noAvailableNotebooks": {
     "message": "No notebooks are available in EdgeEver."
   },
@@ -274,10 +289,10 @@
     "message": "This save has expired. Right-click the image and try again."
   },
   "saveTweetToEdgeEver": {
-    "message": "Save this post to EdgeEver"
+    "message": "Save post to EdgeEver"
   },
   "tweetSaveHint": {
-    "message": "On X, right-click a post and choose “Save this post to EdgeEver”. The post text, including text behind Show more, and the photos go into one new note in the same default notebook."
+    "message": "On X, right-click a post and choose “Save post to EdgeEver”. The post text, including text behind Show more, and the photos go into one new note in the same default notebook."
   },
   "savingTweet": {
     "message": "Saving this post…"
@@ -310,9 +325,165 @@
     "message": "Post"
   },
   "tweetSaveWindowTitle": {
-    "message": "Save this post to EdgeEver"
+    "message": "Save post to EdgeEver"
   },
   "tweetTimeLabel": {
     "message": "Time"
+  },
+  "saveGithubRepoToEdgeEver": {
+    "message": "Save repository info to EdgeEver"
+  },
+  "githubRepoSaveHint": {
+    "message": "On a GitHub repository page or code tree, right-click the page background, the description, or the README text and choose “Save repository info to EdgeEver”. The address and description are saved as a new note in the default notebook selected above. Issue, discussion, and single-file pages are left unsaved."
+  },
+  "savingGithubRepo": {
+    "message": "Saving this repository…"
+  },
+  "githubRepoSaved": {
+    "message": "Saved this repository as a note."
+  },
+  "githubRepoNotPage": {
+    "message": "This is not a GitHub repository page or code tree, so nothing was saved."
+  },
+  "githubRepoUnreadable": {
+    "message": "The repository details could not be read, so nothing was saved."
+  },
+  "githubRepoHomepageLabel": {
+    "message": "Homepage"
+  },
+  "githubRepoLanguageLabel": {
+    "message": "Language"
+  },
+  "githubRepoLicenseLabel": {
+    "message": "License"
+  },
+  "githubRepoTopicsLabel": {
+    "message": "Topics"
+  },
+  "saveXhsToEdgeEver": {
+    "message": "Save note to EdgeEver"
+  },
+  "xhsSaveHint": {
+    "message": "On Xiaohongshu, right-click the note text and choose “Save note to EdgeEver”. The title, text, and photos go into one new note. Comments are left out. Right-clicking a photo still saves that image only."
+  },
+  "savingXhs": {
+    "message": "Saving this note…"
+  },
+  "xhsSaved": {
+    "message": "Saved this note."
+  },
+  "xhsNotFound": {
+    "message": "Could not find that note. Open it, then right-click the text."
+  },
+  "xhsNeedsOpen": {
+    "message": "Open the note, then right-click its text."
+  },
+  "xhsPermissionIntro": {
+    "message": "The feed has many notes. Allow access to Xiaohongshu so the clipper can remember the note under the pointer. After that, right-click the same note once more. Only the note you choose is saved to the clipper's default notebook."
+  },
+  "xhsPermissionToast": {
+    "message": "Allow access to Xiaohongshu to choose a note on the feed. Then right-click that note again."
+  },
+  "xhsRightClickAgain": {
+    "message": "Notes on the feed can be recognized now. Right-click that note again."
+  },
+  "allowXhsAccess": {
+    "message": "Allow access to Xiaohongshu"
+  },
+  "xhsPermissionDenied": {
+    "message": "Access was not allowed. Right-click the note again to retry."
+  },
+  "xhsPermissionReady": {
+    "message": "Access allowed. Go back and right-click that note again."
+  },
+  "xhsNoteFallbackTitle": {
+    "message": "Xiaohongshu note"
+  },
+  "xhsSaveWindowTitle": {
+    "message": "Save note to EdgeEver"
+  },
+  "xhsLocationLabel": {
+    "message": "Location"
+  },
+  "saveZhihuToEdgeEver": {
+    "message": "Save answer or article to EdgeEver"
+  },
+  "zhihuQuestionLabel": {
+    "message": "Question"
+  },
+  "zhihuArticleLabel": {
+    "message": "Article"
+  },
+  "zhihuAuthorLabel": {
+    "message": "Author:"
+  },
+  "zhihuAnswerLabel": {
+    "message": "Answer"
+  },
+  "zhihuArticleBodyLabel": {
+    "message": "Body"
+  },
+  "zhihuSaveHint": {
+    "message": "On Zhihu, right-click the answer or article text and choose “Save answer or article to EdgeEver”. The title, author, text, and photos go into one new note. Comments are left out. Right-clicking a photo still saves that image only."
+  },
+  "savingZhihu": {
+    "message": "Saving this Zhihu answer or article…"
+  },
+  "zhihuSaved": {
+    "message": "Saved this Zhihu answer or article."
+  },
+  "zhihuNotFound": {
+    "message": "Could not find that answer or article. Right-click its text."
+  },
+  "zhihuUnreadable": {
+    "message": "Could not read that answer or article, so nothing was saved."
+  },
+  "zhihuPermissionIntro": {
+    "message": "This page lists more than one answer or article. Allow access to Zhihu so the clipper can remember the one under the pointer. After that, right-click the same text once more. Only the item you choose is saved to the clipper's default notebook."
+  },
+  "zhihuPermissionToast": {
+    "message": "Allow access to Zhihu to choose an answer or article in the list. Then right-click that text again."
+  },
+  "zhihuRightClickAgain": {
+    "message": "Answers and articles on this page can be recognized now. Right-click that text again."
+  },
+  "allowZhihuAccess": {
+    "message": "Allow access to Zhihu"
+  },
+  "zhihuPermissionDenied": {
+    "message": "Access was not allowed. Right-click the text again to retry."
+  },
+  "zhihuPermissionReady": {
+    "message": "Access allowed. Go back and right-click that text again."
+  },
+  "zhihuNoteFallbackTitle": {
+    "message": "Zhihu answer or article"
+  },
+  "zhihuSaveWindowTitle": {
+    "message": "Save answer or article to EdgeEver"
+  },
+  "saveRedditToEdgeEver": {
+    "message": "Save Reddit post to EdgeEver"
+  },
+  "savingReddit": {
+    "message": "Saving this Reddit post…"
+  },
+  "redditSaved": {
+    "message": "Saved this Reddit post as a note."
+  },
+  "redditNotFound": {
+    "message": "Could not find that Reddit post. Right-click directly on a post."
+  },
+  "redditRightClickAgain": {
+    "message": "Reddit posts can be recognized now. Right-click that post again."
+  },
+  "redditAuthorLabel": {
+    "message": "Author"
+  },
+  "redditCommunityLabel": {
+    "message": "Community"
+  },
+  "redditLinkLabel": {
+    "message": "Linked page"
   }
 }
